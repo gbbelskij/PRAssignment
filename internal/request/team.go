@@ -1,9 +1,7 @@
 package request
 
-import "github.com/google/uuid"
-
 type TeamAddRequest struct {
-	Team TeamRequest `json:"Team" env-required:"true"`
+	Team TeamRequest `json:"team" env-required:"true"`
 }
 
 type TeamRequest struct {
@@ -12,7 +10,7 @@ type TeamRequest struct {
 }
 
 type TeamMember struct {
-	UserId   uuid.UUID `json:"user_id" env-required:"true"`
-	Username string    `json:"username" env-required:"true"`
-	IsActive bool      `json:"is_active" env-required:"true"`
+	UserId   string `json:"user_id" env-required:"true"`
+	Username string `json:"username" env-required:"true"`
+	IsActive bool   `json:"is_active" env-required:"true"`
 }

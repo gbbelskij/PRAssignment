@@ -1,7 +1,9 @@
 package main
 
 import (
+	teamAdd "PRAssignment/internal/api/handlers/team/add"
 	"PRAssignment/internal/container"
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,6 +12,8 @@ import (
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+
 	container := container.NewContainer()
 
 	router := gin.Default()
@@ -17,7 +21,7 @@ func main() {
 		gin.Recovery(),
 		gin.Logger(),
 	)
-	setUpRoutes(router)
+	setUpRoutes(ctx, container, router)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -25,15 +29,16 @@ func main() {
 
 	container.Logger.Info("received shutdown signal")
 
+	cancel()
 	container.Storage.Close()
 
 	container.Logger.Info("shutting down gracefully")
 }
 
-func setUpRoutes(router *gin.Engine) {
+func setUpRoutes(ctx context.Context, container *container.Container, router *gin.Engine) {
 	teamGroup := router.Group("/team")
 	{
-		teamGroup.POST("/add")
+		teamGroup.POST("/add", teamAdd.Handle(ctx, container.Logger, container.Storage))
 		teamGroup.GET("/get")
 	}
 
