@@ -3,6 +3,7 @@ package app
 import (
 	teamAdd "PRAssignment/internal/api/handlers/team/add"
 	teamGet "PRAssignment/internal/api/handlers/team/get"
+	usersIsActive "PRAssignment/internal/api/handlers/users/setIsActive"
 	"PRAssignment/internal/container"
 	"context"
 
@@ -48,7 +49,7 @@ func setUpRoutes(ctx context.Context, container *container.Container, router *gi
 
 	usersGroup := router.Group("/users")
 	{
-		usersGroup.POST("/setIsActive")
+		usersGroup.POST("/setIsActive", usersIsActive.Handle(container.Logger, container.Storage))
 		usersGroup.GET("/getReview")
 	}
 

@@ -59,21 +59,6 @@ func (s *Storage) UpdateTeamMemberTeamId(ctx context.Context, tx pgx.Tx, userId 
 	return nil
 }
 
-func (s *Storage) UserExists(ctx context.Context, tx pgx.Tx, userId string) (bool, error) {
-	const op = "repository.storage.UserExists"
-
-	var exists bool
-	err := tx.QueryRow(ctx,
-		`SELECT EXISTS(SELECT 1 FROM team_members WHERE user_id = $1)`,
-		userId,
-	).Scan(&exists)
-	if err != nil {
-		return false, fmt.Errorf("%s: %w", op, err)
-	}
-
-	return exists, nil
-}
-
 func (s *Storage) SaveTeamWithMembers(
 	ctx context.Context,
 	team *domain.Team,
@@ -134,8 +119,7 @@ func (s *Storage) GetTeam(ctx context.Context, teamName string) (*domain.Team, e
 func (s *Storage) GetMembers(ctx context.Context, teamId string) ([]domain.TeamMember, error) {
 	const op = "repository.storage.team.GetMembers"
 
-	rows, err := s.conn.Query(
-		ctx,
+	rows, err := s.conn.Query(ctx,
 		`SELECT user_id, team_id, username, is_active
 		FROM team_members
 		WHERE team_id = $1`,
@@ -160,4 +144,19 @@ func (s *Storage) GetMembers(ctx context.Context, teamId string) ([]domain.TeamM
 	}
 
 	return members, nil
+}
+
+func (s *Storage) GetTeamNameById(ctx context.Context, teamId string) (string, error) {
+	const op = "repository.storage.GetTeamNameById"
+
+	var teamName string
+	err := s.conn.QueryRow(ctx,
+		`SELECT team_name FROM teams WHERE team_id = $1`,
+		teamId,
+	).Scan(&teamName)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	return teamName, nil
 }

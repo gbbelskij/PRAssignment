@@ -26,12 +26,10 @@ func Handle(log *slog.Logger, teamAdder TeamAdder) gin.HandlerFunc {
 
 		if err := c.ShouldBindJSON(&req); err != nil {
 			log.Error("invalid request", logger.Err(err))
-			c.JSON(http.StatusBadRequest, response.ErrorResponse{
-				Error: response.Error{
-					Code:    response.ErrBadRequest,
-					Message: "invalid request",
-				},
-			})
+			c.JSON(http.StatusBadRequest, response.MakeError(
+				response.ErrCodeBadRequest,
+				"Invalid request",
+			))
 			return
 		}
 
@@ -45,21 +43,17 @@ func Handle(log *slog.Logger, teamAdder TeamAdder) gin.HandlerFunc {
 			log.Error("failed to save team with members", logger.Err(err))
 
 			if errors.Is(err, customErrors.ErrUniqueViolation) {
-				c.JSON(http.StatusBadRequest, response.ErrorResponse{
-					Error: response.Error{
-						Code:    response.ErrCodeTeamExists,
-						Message: fmt.Sprintf("%s already exists", req.TeamName),
-					},
-				})
+				c.JSON(http.StatusBadRequest, response.MakeError(
+					response.ErrCodeTeamExists,
+					fmt.Sprintf("%s already exists", req.TeamName),
+				))
 				return
 			}
 
-			c.JSON(http.StatusInternalServerError, response.ErrorResponse{
-				Error: response.Error{
-					Code:    response.ErrBadRequest,
-					Message: "invalid request",
-				},
-			})
+			c.JSON(http.StatusInternalServerError, response.MakeError(
+				response.ErrCodeBadRequest,
+				"Invalid request",
+			))
 			return
 		}
 

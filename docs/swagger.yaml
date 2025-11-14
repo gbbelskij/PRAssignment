@@ -155,11 +155,11 @@ paths:
                 team:
                   team_name: backend
                   members:
-                    - user_id: u1
+                    - user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                       username: Alice
                       is_active: true
-                    - user_id: u2
-                      username: Bob
+                    - user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12
+                      username: BoB
                       is_active: true
         '400':
           description: Команда уже существует
@@ -187,10 +187,10 @@ paths:
               example:
                 team_name: backend
                 members:
-                  - user_id: u1
+                  - user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                     username: Alice
                     is_active: true
-                  - user_id: u2
+                  - user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12
                     username: Bob
                     is_active: true
         '404':
@@ -216,7 +216,7 @@ paths:
                 is_active:
                   type: boolean
             example:
-              user_id: u2
+              user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12
               is_active: false
       responses:
         '200':
@@ -230,7 +230,7 @@ paths:
                     $ref: '#/components/schemas/User'
               example:
                 user:
-                  user_id: u2
+                  user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12
                   username: Bob
                   team_name: backend
                   is_active: false
@@ -263,7 +263,7 @@ paths:
             example:
               pull_request_id: pr-1001
               pull_request_name: Add search
-              author_id: u1
+              author_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
       responses:
         '201':
           description: PR создан
@@ -278,9 +278,9 @@ paths:
                 pr:
                   pull_request_id: pr-1001
                   pull_request_name: Add search
-                  author_id: u1
+                  author_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                   status: OPEN
-                  assigned_reviewers: [u2, u3]
+                  assigned_reviewers: [a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12, a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13]
         '404':
           description: Автор/команда не найдены
           content:
@@ -323,9 +323,9 @@ paths:
                 pr:
                   pull_request_id: pr-1001
                   pull_request_name: Add search
-                  author_id: u1
+                  author_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                   status: MERGED
-                  assigned_reviewers: [u2, u3]
+                  assigned_reviewers: [a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12, a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13]
                   mergedAt: 2025-10-24T12:34:56Z
         '404':
           description: PR не найден
@@ -349,7 +349,7 @@ paths:
                 old_user_id: { type: string }
             example:
               pull_request_id: pr-1001
-              old_reviewer_id: u2
+              old_reviewer_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12
       responses:
         '200':
           description: Переназначение выполнено
@@ -368,10 +368,10 @@ paths:
                 pr:
                   pull_request_id: pr-1001
                   pull_request_name: Add search
-                  author_id: u1
+                  author_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                   status: OPEN
-                  assigned_reviewers: [u3, u5]
-                replaced_by: u5
+                  assigned_reviewers: [a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13, a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15]
+                replaced_by: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a15
         '404':
           description: PR или пользователь не найден
           content:
@@ -418,9 +418,9 @@ paths:
                     items:
                       $ref: '#/components/schemas/PullRequestShort'
               example:
-                user_id: u2
+                user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12
                 pull_requests:
                   - pull_request_id: pr-1001
                     pull_request_name: Add search
-                    author_id: u1
+                    author_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                     status: OPEN
