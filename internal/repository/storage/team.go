@@ -4,6 +4,7 @@ import (
 	"PRAssignment/internal/domain"
 	customErrors "PRAssignment/internal/repository/custom_errors"
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -112,4 +113,51 @@ func (s *Storage) SaveTeamWithMembers(
 	})
 
 	return teamID, err
+}
+
+func (s *Storage) GetTeam(ctx context.Context, teamName string) (*domain.Team, error) {
+	const op = "repository.storage.team.GetTeam"
+
+	var team domain.Team
+	err := s.conn.QueryRow(ctx,
+		`SELECT team_id, team_name FROM teams WHERE team_name = $1`,
+		teamName).Scan(&team.TeamID, &team.TeamName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, customErrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return &team, nil
+}
+
+func (s *Storage) GetMembers(ctx context.Context, teamId string) ([]domain.TeamMember, error) {
+	const op = "repository.storage.team.GetMembers"
+
+	rows, err := s.conn.Query(
+		ctx,
+		`SELECT user_id, team_id, username, is_active
+		FROM team_members
+		WHERE team_id = $1`,
+		teamId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var members []domain.TeamMember
+	for rows.Next() {
+		var member domain.TeamMember
+		if err := rows.Scan(&member.UserID, &member.TeamID, &member.Username, &member.IsActive); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		members = append(members, member)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return members, nil
 }

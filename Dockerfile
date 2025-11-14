@@ -14,6 +14,7 @@ RUN apt-get update && \
 WORKDIR /app
 COPY --from=builder --chown=appuser:appuser /app/server /app/
 COPY --from=builder --chown=appuser:appuser /app/configs /app/configs
+COPY --from=builder --chown=appuser:appuser /app/docs /app/docs
 
 USER appuser
 EXPOSE 8080

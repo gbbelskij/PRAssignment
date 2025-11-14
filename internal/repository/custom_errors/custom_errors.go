@@ -15,4 +15,5 @@ func IsUniqueViolation(err error) bool {
 
 var (
 	ErrUniqueViolation = errors.New("already exists")
+	ErrNotFound        = errors.New("not found")
 )

@@ -5,7 +5,7 @@ import (
 	"PRAssignment/internal/request"
 )
 
-func TeamFromRequest(teamRequest request.TeamRequest) *domain.Team {
+func TeamFromRequest(teamRequest request.TeamAddRequest) *domain.Team {
 	return &domain.Team{
 		TeamName: teamRequest.TeamName,
 	}

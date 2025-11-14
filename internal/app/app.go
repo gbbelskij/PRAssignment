@@ -2,10 +2,13 @@ package app
 
 import (
 	teamAdd "PRAssignment/internal/api/handlers/team/add"
+	teamGet "PRAssignment/internal/api/handlers/team/get"
 	"PRAssignment/internal/container"
 	"context"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type App struct {
@@ -32,10 +35,15 @@ func (a *App) Run(ctx context.Context) error {
 }
 
 func setUpRoutes(ctx context.Context, container *container.Container, router *gin.Engine) {
+	router.Static("/docs", "./docs")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
+		ginSwagger.URL("/docs/swagger.yaml"),
+	))
+
 	teamGroup := router.Group("/team")
 	{
-		teamGroup.POST("/add", teamAdd.Handle(ctx, container.Logger, container.Storage))
-		teamGroup.GET("/get")
+		teamGroup.POST("/add", teamAdd.Handle(container.Logger, container.Storage))
+		teamGroup.GET("/get", teamGet.Handle(container.Logger, container.Storage))
 	}
 
 	usersGroup := router.Group("/users")
