@@ -3,13 +3,14 @@ package response
 type ErrorCode string
 
 const (
-	ErrCodeTeamExists  ErrorCode = "TEAM_EXISTS"
-	ErrCodePRExists    ErrorCode = "PR_EXISTS"
-	ErrCodePRMerged    ErrorCode = "PR_MERGED"
-	ErrCodeNotAssigned ErrorCode = "NOT_ASSIGNED"
-	ErrCodeNoCandidate ErrorCode = "NO_CANDIDATE"
-	ErrCodeNotFound    ErrorCode = "NOT_FOUND"
-	ErrCodeBadRequest  ErrorCode = "BAD_REQUEST"
+	ErrCodeTeamExists          ErrorCode = "TEAM_EXISTS"
+	ErrCodePRExists            ErrorCode = "PR_EXISTS"
+	ErrCodePRMerged            ErrorCode = "PR_MERGED"
+	ErrCodeNotAssigned         ErrorCode = "NOT_ASSIGNED"
+	ErrCodeNoCandidate         ErrorCode = "NO_CANDIDATE"
+	ErrCodeNotFound            ErrorCode = "NOT_FOUND"
+	ErrCodeBadRequest          ErrorCode = "BAD_REQUEST"
+	ErrCodeInternalServerError ErrorCode = "INTERNAL_SERVER_ERROR"
 )
 
 type ErrorResponse struct {

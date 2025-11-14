@@ -6,7 +6,7 @@ type PullRequestStatus string
 
 const (
 	PullRequestStatusOpen   PullRequestStatus = "open"
-	PullRequestStatusClosed PullRequestStatus = "closed"
+	PullRequestStatusMerged PullRequestStatus = "merged"
 )
 
 type PullRequest struct {

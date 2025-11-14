@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS team_members (
     is_active BOOLEAN DEFAULT false NOT NULL
 );
 
-CREATE TYPE pull_request_status AS ENUM ('open', 'closed');
+CREATE TYPE pull_request_status AS ENUM ('open', 'merged');
 
 CREATE TABLE IF NOT EXISTS pull_requests(
     pull_request_id UUID PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS pull_requests(
     author_id UUID REFERENCES team_members(user_id) ON DELETE CASCADE,
     status pull_request_status NOT NULL,
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
-    merged_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    merged_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 

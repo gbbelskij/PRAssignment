@@ -1,1 +1,7 @@
 package request
+
+type PullRequestCreateRequest struct {
+	PullRequestId   string `json:"pull_request_id" env-required:"true"`
+	PullRequestName string `json:"pull_request_name" env-required:"true"`
+	AuthorId        string `json:"author_id" env-required:"true"`
+}
