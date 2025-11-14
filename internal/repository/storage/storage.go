@@ -24,6 +24,28 @@ func NewStorage(ctx context.Context) (*Storage, error) {
 	return &Storage{conn: conn}, nil
 }
 
+func (s *Storage) WithTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	tx, err := s.conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback(ctx)
+			panic(r)
+		}
+	}()
+
+	err = fn(ctx)
+	if err != nil {
+		tx.Rollback(ctx)
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
 func (s *Storage) Close() {
 	s.conn.Close()
 }
