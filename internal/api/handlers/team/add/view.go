@@ -8,6 +8,7 @@ import (
 	service "PRAssignment/internal/service/team"
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -15,9 +16,7 @@ import (
 )
 
 type TeamAdder interface {
-	SaveTeam(ctx context.Context, team *domain.Team) (string, error)
-	SaveTeamMembersBatch(ctx context.Context, members []domain.TeamMember) error
-	WithTx(ctx context.Context, fn func(ctx context.Context) error) error
+	SaveTeamWithMembers(ctx context.Context, team *domain.Team, members []domain.TeamMember) (string, error)
 }
 
 func Handle(ctx context.Context, log *slog.Logger, teamAdder TeamAdder) gin.HandlerFunc {
@@ -30,38 +29,25 @@ func Handle(ctx context.Context, log *slog.Logger, teamAdder TeamAdder) gin.Hand
 			return
 		}
 
-		err := teamAdder.WithTx(c.Request.Context(), func(ctx context.Context) error {
-			teamId, err := teamAdder.SaveTeam(
-				ctx,
-				service.TeamFromRequest(req.Team),
-			)
-			if err != nil {
-				return err
-			}
-			log.Info("saved team successfully")
-
-			err = teamAdder.SaveTeamMembersBatch(
-				ctx,
-				service.TeamMembersFromRequest(teamId, req.Team.Members),
-			)
-			if err != nil {
-				return err
-			}
-			log.Info("saved team members successfully")
-
-			return nil
-		})
+		teamId, err := teamAdder.SaveTeamWithMembers(
+			c.Request.Context(),
+			service.TeamFromRequest(req.Team),
+			service.TeamMembersFromRequest(req.Team.Members),
+		)
 
 		if err != nil {
-			log.Error("failed to save team or team members", logger.Err(err))
+			log.Error("failed to save team with members", logger.Err(err))
+
 			if errors.Is(err, customErrors.ErrUniqueViolation) {
-				c.JSON(http.StatusConflict, gin.H{"message": "team or team member already exists"})
+				c.JSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%s already exists", req.Team.TeamName)})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to save team or team members"})
+
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to save team"})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "saved team successfully"})
+		log.Info("saved team with members successfully", "team_id", teamId)
+		c.JSON(http.StatusCreated, gin.H{"message": "saved team successfully", "team_id": teamId})
 	}
 }

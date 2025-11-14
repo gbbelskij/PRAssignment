@@ -11,12 +11,11 @@ func TeamFromRequest(teamRequest request.TeamRequest) *domain.Team {
 	}
 }
 
-func TeamMembersFromRequest(teamId string, teamMembers []request.TeamMember) []domain.TeamMember {
+func TeamMembersFromRequest(teamMembers []request.TeamMember) []domain.TeamMember {
 	var members []domain.TeamMember
 
 	for _, teamMember := range teamMembers {
 		member := domain.TeamMember{
-			TeamID:   teamId,
 			UserID:   teamMember.UserId,
 			Username: teamMember.Username,
 			IsActive: teamMember.IsActive,

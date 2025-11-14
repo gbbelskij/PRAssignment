@@ -10,11 +10,10 @@ CREATE TABLE IF NOT EXISTS teams(
 CREATE INDEX IF NOT EXISTS teams_team_name_idx ON teams(team_name);
 
 CREATE TABLE IF NOT EXISTS team_members (
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
     team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
-    user_id UUID UNIQUE NOT NULL,
     username VARCHAR(255) UNIQUE NOT NULL,
-    is_active BOOLEAN DEFAULT false NOT NULL,
-    PRIMARY KEY (team_id, user_id, username)
+    is_active BOOLEAN DEFAULT false NOT NULL
 );
 
 CREATE TYPE pull_request_status AS ENUM ('open', 'closed');

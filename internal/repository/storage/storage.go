@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"PRAssignment/internal/repository/transaction"
 	"context"
 	"fmt"
 	"os"
@@ -9,7 +10,8 @@ import (
 )
 
 type Storage struct {
-	conn *pgxpool.Pool
+	conn      *pgxpool.Pool
+	txManager transaction.Manager
 }
 
 func NewStorage(ctx context.Context) (*Storage, error) {
@@ -21,29 +23,12 @@ func NewStorage(ctx context.Context) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &Storage{conn: conn}, nil
-}
+	txManager := transaction.NewPGXManager(conn)
 
-func (s *Storage) WithTx(ctx context.Context, fn func(ctx context.Context) error) error {
-	tx, err := s.conn.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback(ctx)
-			panic(r)
-		}
-	}()
-
-	err = fn(ctx)
-	if err != nil {
-		tx.Rollback(ctx)
-		return err
-	}
-
-	return tx.Commit(ctx)
+	return &Storage{
+		conn:      conn,
+		txManager: txManager,
+	}, nil
 }
 
 func (s *Storage) Close() {
