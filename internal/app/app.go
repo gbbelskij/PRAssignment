@@ -6,6 +6,7 @@ import (
 	pullRequestReassign "PRAssignment/internal/api/handlers/pullRequest/reassign"
 	teamAdd "PRAssignment/internal/api/handlers/team/add"
 	teamGet "PRAssignment/internal/api/handlers/team/get"
+	usersGetReview "PRAssignment/internal/api/handlers/users/getReview"
 	usersIsActive "PRAssignment/internal/api/handlers/users/setIsActive"
 	"PRAssignment/internal/container"
 	"context"
@@ -53,7 +54,7 @@ func setUpRoutes(ctx context.Context, container *container.Container, router *gi
 	usersGroup := router.Group("/users")
 	{
 		usersGroup.POST("/setIsActive", usersIsActive.Handle(container.Logger, container.Storage))
-		usersGroup.GET("/getReview")
+		usersGroup.GET("/getReview", usersGetReview.Handle(container.Logger, container.Storage))
 	}
 
 	prGroup := router.Group("/pullRequest")

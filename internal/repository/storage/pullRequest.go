@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -271,4 +272,86 @@ func (s *Storage) UpdateReviewer(ctx context.Context, pullRequestId string, oldU
 	}
 
 	return pullRequest, newReviewerId, nil
+}
+
+func (s *Storage) GetPullRequests(ctx context.Context, userId string) ([]domain.PullRequest, error) {
+	const op = "repository.storage.GetPullRequests"
+
+	rows, err := s.conn.Query(ctx,
+		`SELECT pull_request_id FROM pull_request_reviewers WHERE user_id = $1`,
+		userId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var pullRequestIds []string
+	for rows.Next() {
+		var prId string
+		if err := rows.Scan(&prId); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		pullRequestIds = append(pullRequestIds, prId)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if len(pullRequestIds) == 0 {
+		return []domain.PullRequest{}, nil
+	}
+
+	query, args, err := buildInQuery(
+		`SELECT pull_request_id, pull_request_name, author_id, status, updated_at, merged_at, created_at
+		FROM pull_requests
+		WHERE pull_request_id IN (`,
+		pullRequestIds,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	prRows, err := s.conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer prRows.Close()
+
+	var pullRequests []domain.PullRequest
+	for prRows.Next() {
+		var pr domain.PullRequest
+		if err := prRows.Scan(
+			&pr.PullRequestID,
+			&pr.PullRequestName,
+			&pr.AuthorID,
+			&pr.Status,
+			&pr.UpdatedAt,
+			&pr.MergedAt,
+			&pr.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		pullRequests = append(pullRequests, pr)
+	}
+
+	if err := prRows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return pullRequests, nil
+}
+
+func buildInQuery(baseQuery string, values []string) (string, []interface{}, error) {
+	if len(values) == 0 {
+		return "", nil, fmt.Errorf("no values to build query")
+	}
+	placeholders := make([]string, len(values))
+	args := make([]interface{}, len(values))
+	for i, v := range values {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = v
+	}
+	query := baseQuery + strings.Join(placeholders, ",") + ")"
+	return query, args, nil
 }
