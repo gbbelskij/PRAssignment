@@ -30,6 +30,19 @@ type PullRequestMerge struct {
 	MergedAt          time.Time                `json:"merged_at"`
 }
 
+type PullRequestReassignResponse struct {
+	PR         PullRequestReassign `json:"pr"`
+	ReplacedBy string              `json:"replaced_by"`
+}
+
+type PullRequestReassign struct {
+	PullRequestId     string                   `json:"pull_request_id"`
+	PullRequestName   string                   `json:"pull_request_name"`
+	AuthorId          string                   `json:"author_id"`
+	Status            domain.PullRequestStatus `json:"status"`
+	AssignedReviewers []string                 `json:"assigned_reviewers"`
+}
+
 func MakePullRequestCreateResponse(
 	pullRequestId string,
 	pullRequestName string,
@@ -65,5 +78,25 @@ func MakePullRequestMergeResponse(
 			AssignedReviewers: assignedReviewers,
 			MergedAt:          mergedAt,
 		},
+	}
+}
+
+func MakePullRequestReassignResponse(
+	pullRequestId string,
+	pullRequestName string,
+	authorId string,
+	status domain.PullRequestStatus,
+	assignedReviewers []string,
+	replacedBy string,
+) PullRequestReassignResponse {
+	return PullRequestReassignResponse{
+		PR: PullRequestReassign{
+			PullRequestId:     pullRequestId,
+			PullRequestName:   pullRequestName,
+			AuthorId:          authorId,
+			Status:            status,
+			AssignedReviewers: assignedReviewers,
+		},
+		ReplacedBy: replacedBy,
 	}
 }

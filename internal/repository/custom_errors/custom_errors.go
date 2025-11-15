@@ -17,4 +17,6 @@ var (
 	ErrUniqueViolation = errors.New("already exists")
 	ErrNotFound        = errors.New("not found")
 	ErrNoCandidate     = errors.New("no candidate")
+	ErrPrMerged        = errors.New("pr merged")
+	ErrNotAssigned     = errors.New("not assigned")
 )

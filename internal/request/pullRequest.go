@@ -7,5 +7,10 @@ type PullRequestCreateRequest struct {
 }
 
 type PullRequestMergeRequest struct {
-	PullRequestId string `json:"pull_request_id"`
+	PullRequestId string `json:"pull_request_id" env-required:"true"`
+}
+
+type PullRequestReassignRequest struct {
+	PullRequestId string `json:"pull_request_id" env-required:"true"`
+	OldUserId     string `json:"old_user_id" env-required:"true"`
 }

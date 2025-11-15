@@ -121,6 +121,24 @@ func (s *Storage) getPullRequestById(ctx context.Context, pullRequestId string) 
 	return &pullRequest, nil
 }
 
+func (s *Storage) getStatusPullRequestById(ctx context.Context, pullRequestId string) (*domain.PullRequestStatus, error) {
+	const op = "repository.storage.getPullRequestById"
+
+	var status domain.PullRequestStatus
+	err := s.conn.QueryRow(ctx,
+		`SELECT status
+        FROM pull_requests WHERE pull_request_id = $1`,
+		pullRequestId,
+	).Scan(&status)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, customErrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return &status, nil
+}
+
 func (s *Storage) UpdatePullRequest(ctx context.Context, pullRequestId string) (*domain.PullRequest, error) {
 	const op = "repository.storage.UpdatePullRequest"
 
@@ -173,4 +191,84 @@ func (s *Storage) GetPullRequestReviewers(ctx context.Context, pullRequestId str
 	}
 
 	return reviewers, nil
+}
+
+func (s *Storage) ReassignReviewer(ctx context.Context, pullRequestId string, oldUserId string) (string, error) {
+	const op = "repository.storage.ReassignReviewer"
+
+	var newReviewerId string
+	err := s.conn.QueryRow(ctx,
+		`SELECT user_id FROM team_members
+		WHERE team_id = (SELECT team_id FROM team_members WHERE user_id = $1 LIMIT 1)
+		AND user_id <> $1
+		AND is_active = true
+		LIMIT 1`,
+		oldUserId,
+	).Scan(&newReviewerId)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", customErrors.ErrNoCandidate
+		}
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = s.conn.Exec(ctx,
+		`DELETE FROM pull_request_reviewers WHERE user_id = $1`,
+		oldUserId,
+	)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	_, err = s.conn.Exec(ctx,
+		`INSERT INTO pull_request_reviewers(pull_request_id, user_id) VALUES($1, $2)`,
+		pullRequestId, newReviewerId,
+	)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	return newReviewerId, nil
+}
+
+func (s *Storage) UpdateReviewer(ctx context.Context, pullRequestId string, oldUserId string) (*domain.PullRequest, string, error) {
+	const op = "repository.storage.UpdateReviewer"
+
+	status, err := s.getStatusPullRequestById(ctx, pullRequestId)
+	if err != nil {
+		return nil, "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	if *status == domain.PullRequestStatusMerged {
+		return nil, "", customErrors.ErrPrMerged
+	}
+
+	reviewers, err := s.GetPullRequestReviewers(ctx, pullRequestId)
+	if err != nil {
+		return nil, "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	isReviewer := false
+	for _, r := range reviewers {
+		if r == oldUserId {
+			isReviewer = true
+			break
+		}
+	}
+
+	if !isReviewer {
+		return nil, "", customErrors.ErrNotAssigned
+	}
+
+	newReviewerId, err := s.ReassignReviewer(ctx, pullRequestId, oldUserId)
+	if err != nil {
+		return nil, "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	pullRequest, err := s.getPullRequestById(ctx, pullRequestId)
+	if err != nil {
+		return nil, "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	return pullRequest, newReviewerId, nil
 }

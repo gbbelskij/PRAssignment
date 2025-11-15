@@ -3,6 +3,7 @@ package app
 import (
 	pullRequestCreate "PRAssignment/internal/api/handlers/pullRequest/create"
 	pullRequestMerge "PRAssignment/internal/api/handlers/pullRequest/merge"
+	pullRequestReassign "PRAssignment/internal/api/handlers/pullRequest/reassign"
 	teamAdd "PRAssignment/internal/api/handlers/team/add"
 	teamGet "PRAssignment/internal/api/handlers/team/get"
 	usersIsActive "PRAssignment/internal/api/handlers/users/setIsActive"
@@ -59,6 +60,6 @@ func setUpRoutes(ctx context.Context, container *container.Container, router *gi
 	{
 		prGroup.POST("/create", pullRequestCreate.Handle(container.Logger, container.Storage))
 		prGroup.POST("/merge", pullRequestMerge.Handle(container.Logger, container.Storage))
-		prGroup.POST("/reassign")
+		prGroup.POST("/reassign", pullRequestReassign.Handle(container.Logger, container.Storage))
 	}
 }
