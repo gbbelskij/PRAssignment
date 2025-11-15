@@ -5,3 +5,7 @@ type PullRequestCreateRequest struct {
 	PullRequestName string `json:"pull_request_name" env-required:"true"`
 	AuthorId        string `json:"author_id" env-required:"true"`
 }
+
+type PullRequestMergeRequest struct {
+	PullRequestId string `json:"pull_request_id"`
+}

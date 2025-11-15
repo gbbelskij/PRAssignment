@@ -7,6 +7,7 @@ import (
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
 	service "PRAssignment/internal/service/team"
+	"PRAssignment/pkg"
 	"context"
 	"errors"
 	"fmt"
@@ -33,6 +34,10 @@ func Handle(log *slog.Logger, teamAdder TeamAdder) gin.HandlerFunc {
 			return
 		}
 
+		for idx := range req.Members {
+			req.Members[idx].UserId = pkg.ParseOrGenerateUUID(req.Members[idx].UserId)
+		}
+
 		teamId, err := teamAdder.SaveTeamWithMembers(
 			c.Request.Context(),
 			service.TeamFromRequest(req),
@@ -43,6 +48,7 @@ func Handle(log *slog.Logger, teamAdder TeamAdder) gin.HandlerFunc {
 			log.Error("failed to save team with members", logger.Err(err))
 
 			if errors.Is(err, customErrors.ErrUniqueViolation) {
+				log.Error("team already exists", logger.Err(err))
 				c.JSON(http.StatusBadRequest, response.MakeError(
 					response.ErrCodeTeamExists,
 					fmt.Sprintf("%s already exists", req.TeamName),
@@ -50,9 +56,10 @@ func Handle(log *slog.Logger, teamAdder TeamAdder) gin.HandlerFunc {
 				return
 			}
 
+			log.Error("failed to add team", logger.Err(err))
 			c.JSON(http.StatusInternalServerError, response.MakeError(
-				response.ErrCodeBadRequest,
-				"Invalid request",
+				response.ErrCodeInternalServerError,
+				"Failed to add team",
 			))
 			return
 		}

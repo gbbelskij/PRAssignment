@@ -6,6 +6,7 @@ import (
 	customErrors "PRAssignment/internal/repository/custom_errors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
+	"PRAssignment/pkg"
 	"context"
 	"errors"
 	"log/slog"
@@ -32,6 +33,8 @@ func Handle(log *slog.Logger, userUpdaterTeamGetter UserUpdateTeamGetter) gin.Ha
 			return
 		}
 
+		req.UserId = pkg.ParseOrGenerateUUID(req.UserId)
+
 		teamMember, err := userUpdaterTeamGetter.UpdateUser(
 			c.Request.Context(),
 			req.UserId,
@@ -48,8 +51,8 @@ func Handle(log *slog.Logger, userUpdaterTeamGetter UserUpdateTeamGetter) gin.Ha
 			}
 
 			log.Error("failed to find user", logger.Err(err))
-			c.JSON(http.StatusNotFound, response.MakeError(
-				response.ErrCodeBadRequest,
+			c.JSON(http.StatusInternalServerError, response.MakeError(
+				response.ErrCodeInternalServerError,
 				"Failed to find user",
 			))
 			return
@@ -58,8 +61,8 @@ func Handle(log *slog.Logger, userUpdaterTeamGetter UserUpdateTeamGetter) gin.Ha
 		teamName, err := userUpdaterTeamGetter.GetTeamNameById(c.Request.Context(), teamMember.TeamID)
 		if err != nil {
 			log.Error("failed to find team name", logger.Err(err))
-			c.JSON(http.StatusNotFound, response.MakeError(
-				response.ErrCodeBadRequest,
+			c.JSON(http.StatusInternalServerError, response.MakeError(
+				response.ErrCodeInternalServerError,
 				"Failed to find team",
 			))
 			return

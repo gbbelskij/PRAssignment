@@ -7,6 +7,7 @@ import (
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
 	service "PRAssignment/internal/service/pullRequest"
+	"PRAssignment/pkg"
 	"context"
 	"errors"
 	"log/slog"
@@ -31,6 +32,9 @@ func Handle(log *slog.Logger, pullRequestAdder PullRequestAdder) gin.HandlerFunc
 			))
 			return
 		}
+
+		req.AuthorId = pkg.ParseOrGenerateUUID(req.AuthorId)
+		req.PullRequestId = pkg.ParseOrGenerateUUID(req.PullRequestId)
 
 		pullRequest := service.PullRequestFromRequest(req)
 		reviewers, err := pullRequestAdder.AddPullRequest(c.Request.Context(), pullRequest)

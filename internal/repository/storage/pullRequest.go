@@ -39,7 +39,7 @@ func (s *Storage) AddPullRequest(ctx context.Context, pullRequest *domain.PullRe
 			return fmt.Errorf("%s: %w", op, err)
 		}
 
-		reviewers, err = s.FindReviewersTx(txCtx, tx, teamId, pullRequest.AuthorID)
+		reviewers, err = s.FindReviewersTx(txCtx, tx, teamId, pullRequest.AuthorID, pullRequest.PullRequestID)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -56,7 +56,7 @@ func (s *Storage) AddPullRequest(ctx context.Context, pullRequest *domain.PullRe
 	return reviewers, nil
 }
 
-func (s *Storage) FindReviewersTx(ctx context.Context, tx pgx.Tx, teamId string, userId string) ([]string, error) {
+func (s *Storage) FindReviewersTx(ctx context.Context, tx pgx.Tx, teamId string, userId string, pullRequestId string) ([]string, error) {
 	const op = "repository.storage.FindReviewersTx"
 
 	var reviewers []string
@@ -64,6 +64,96 @@ func (s *Storage) FindReviewersTx(ctx context.Context, tx pgx.Tx, teamId string,
 		`SELECT user_id FROM team_members WHERE team_id = $1 AND user_id <> $2 AND is_active = true
         LIMIT 2`,
 		teamId, userId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var reviewerUserId string
+		if err := rows.Scan(&reviewerUserId); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		reviewers = append(reviewers, reviewerUserId)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	for _, revId := range reviewers {
+		_, err := tx.Exec(ctx,
+			`INSERT INTO pull_request_reviewers (pull_request_id, user_id) VALUES ($1, $2)`,
+			pullRequestId, revId,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+	}
+
+	return reviewers, nil
+}
+
+func (s *Storage) getPullRequestById(ctx context.Context, pullRequestId string) (*domain.PullRequest, error) {
+	const op = "repository.storage.getPullRequestById"
+
+	var pullRequest domain.PullRequest
+	err := s.conn.QueryRow(ctx,
+		`SELECT pull_request_id, pull_request_name, author_id, status, updated_at, merged_at, created_at
+        FROM pull_requests WHERE pull_request_id = $1`,
+		pullRequestId,
+	).Scan(
+		&pullRequest.PullRequestID,
+		&pullRequest.PullRequestName,
+		&pullRequest.AuthorID,
+		&pullRequest.Status,
+		&pullRequest.UpdatedAt,
+		&pullRequest.MergedAt,
+		&pullRequest.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, customErrors.ErrNotFound
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return &pullRequest, nil
+}
+
+func (s *Storage) UpdatePullRequest(ctx context.Context, pullRequestId string) (*domain.PullRequest, error) {
+	const op = "repository.storage.UpdatePullRequest"
+
+	pr, err := s.getPullRequestById(ctx, pullRequestId)
+	if err != nil {
+		return nil, err
+	}
+	if pr.Status == domain.PullRequestStatusMerged {
+		return pr, nil
+	}
+
+	_, err = s.conn.Exec(ctx,
+		`UPDATE pull_requests 
+        SET status = 'MERGED', 
+            merged_at = NOW(),
+            updated_at = NOW()
+        WHERE pull_request_id = $1`,
+		pullRequestId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return s.getPullRequestById(ctx, pullRequestId)
+}
+
+func (s *Storage) GetPullRequestReviewers(ctx context.Context, pullRequestId string) ([]string, error) {
+	const op = "repository.storage.GetPullRequestReviewers"
+
+	var reviewers []string
+	rows, err := s.conn.Query(ctx,
+		`SELECT user_id FROM pull_request_reviewers WHERE pull_request_id = $1`,
+		pullRequestId,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)

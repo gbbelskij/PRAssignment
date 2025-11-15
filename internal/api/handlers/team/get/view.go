@@ -25,21 +25,28 @@ func Handle(log *slog.Logger, teamGetter TeamGetter) gin.HandlerFunc {
 		team, err := teamGetter.GetTeam(c.Request.Context(), teamName)
 		if err != nil {
 			if errors.Is(err, customErrors.ErrNotFound) {
-				log.Error("failed to find team", logger.Err(err))
+				log.Error("no such team", logger.Err(err))
 				c.JSON(http.StatusNotFound, response.MakeError(
 					response.ErrCodeNotFound,
 					"Team not found",
 				))
 				return
 			}
+
+			log.Error("failed to find team", logger.Err(err))
+			c.JSON(http.StatusInternalServerError, response.MakeError(
+				response.ErrCodeInternalServerError,
+				"Failed to find team",
+			))
+			return
 		}
 
 		members, err := teamGetter.GetMembers(c.Request.Context(), team.TeamID)
 		if err != nil {
 			log.Error("failed to find members", logger.Err(err))
 			c.JSON(http.StatusInternalServerError, response.MakeError(
-				response.ErrCodeBadRequest,
-				"Members not found",
+				response.ErrCodeInternalServerError,
+				"Failed to find members",
 			))
 			return
 		}
