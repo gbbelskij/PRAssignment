@@ -12,9 +12,11 @@
 - Используется golangci-lint с описанной конфигурацией
 
 ## Инструкция по запуску
+**ВАЖНО** Перед запуском создать файл .env в корне репозитория на подобии файла .env.example
 ```bash
 git clone https://github.com/gbbelskij/PRAssignment
 cd PRAssignment
+touch .env # создать новый или скопировать для тестирования .env.example
 docker-compose up
 ```
 
