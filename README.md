@@ -12,7 +12,7 @@
 - Используется golangci-lint с описанной конфигурацией
 
 ## Инструкция по запуску
-**ВАЖНО** Перед запуском создать файл .env в корне репозитория на подобии файла .env.example
+**ВАЖНО** Перед запуском создать файл .env в корне репозитория на подобии файла [`.env.example`](./.env.example)
 ```bash
 git clone https://github.com/gbbelskij/PRAssignment
 cd PRAssignment
