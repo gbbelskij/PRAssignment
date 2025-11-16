@@ -24,7 +24,11 @@ docker-compose up
 
 **Инструмент**: k6  
 **Нагрузка**: до 50 VU за 1 минуту
-
+Были протестированы ручки 
+- /team/add
+- /team/get
+- /users/getReview
+- /pullRequest/create
 ## Ключевые метрики
 
 | Метрика | Значение |
