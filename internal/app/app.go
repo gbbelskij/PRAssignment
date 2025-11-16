@@ -69,6 +69,10 @@ func (a *App) Run(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) GetRouter() *gin.Engine {
+	return a.router
+}
+
 func setUpRoutes(container *container.Container, router *gin.Engine) {
 
 	setIsActiveService := userService.NewSetIsActiveService(container.Storage)

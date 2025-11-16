@@ -1,0 +1,20 @@
+{
+    "team_name": "payments",
+    "members": [
+        {
+            "user_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+            "username": "Alice",
+            "is_active": true
+        },
+        {
+            "user_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
+            "username": "Bob",
+            "is_active": true
+        },
+        {
+            "user_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14",
+            "username": "Stas",
+            "is_active": false
+        }
+    ]
+}

@@ -181,10 +181,11 @@ func (s *Storage) ReassignReviewerInDb(ctx context.Context, pullRequestID string
 	err := s.conn.QueryRow(ctx,
 		`SELECT user_id FROM team_members
         WHERE team_id = (SELECT team_id FROM team_members WHERE user_id = $1 LIMIT 1)
+		AND user_id <> (SELECT author_id FROM pull_requests WHERE pull_request_id = $2 LIMIT 1)
         AND user_id <> $1
         AND is_active = true
         LIMIT 1`,
-		oldUserID,
+		oldUserID, pullRequestID,
 	).Scan(&newReviewerID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
