@@ -24,7 +24,7 @@ func (m *pgxManager) WithTx(ctx context.Context, fn func(context.Context, pgx.Tx
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx) // Гарантирует откат при любой ошибке
+	defer tx.Rollback(ctx)
 
 	if err := fn(ctx, tx); err != nil {
 		return err

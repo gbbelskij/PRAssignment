@@ -25,12 +25,12 @@ func (s *TeamAddService) AddTeam(ctx context.Context, req *request.TeamAddReques
 	team := TeamFromRequest(*req)
 	members := TeamMembersFromRequest(req.Members)
 
-	teamId, err := s.storage.SaveTeamWithMembers(ctx, team, members)
+	teamID, err := s.storage.SaveTeamWithMembers(ctx, team, members)
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	return teamId, nil
+	return teamID, nil
 }
 
 func TeamFromRequest(teamRequest request.TeamAddRequest) *domain.Team {
@@ -40,11 +40,11 @@ func TeamFromRequest(teamRequest request.TeamAddRequest) *domain.Team {
 }
 
 func TeamMembersFromRequest(teamMembers []request.TeamMember) []domain.TeamMember {
-	var members []domain.TeamMember
+	members := make([]domain.TeamMember, 0, len(teamMembers))
 
 	for _, teamMember := range teamMembers {
 		member := domain.TeamMember{
-			UserID:   teamMember.UserId,
+			UserID:   teamMember.UserID,
 			Username: teamMember.Username,
 			IsActive: teamMember.IsActive,
 		}

@@ -1,8 +1,8 @@
-package teamAdd
+package teamadd
 
 import (
 	"PRAssignment/internal/logger"
-	"PRAssignment/internal/repository/customErrors"
+	customerrors "PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
 	"PRAssignment/pkg"
@@ -15,11 +15,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type TeamAddService interface {
+type teamAddService interface {
 	AddTeam(ctx context.Context, req *request.TeamAddRequest) (string, error)
 }
 
-func Handle(log *slog.Logger, teamAddService TeamAddService) gin.HandlerFunc {
+func Handle(log *slog.Logger, teamAddSvc teamAddService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req request.TeamAddRequest
 
@@ -33,12 +33,12 @@ func Handle(log *slog.Logger, teamAddService TeamAddService) gin.HandlerFunc {
 		}
 
 		for idx := range req.Members {
-			req.Members[idx].UserId = pkg.ParseOrGenerateUUID(req.Members[idx].UserId)
+			req.Members[idx].UserID = pkg.ParseOrGenerateUUID(req.Members[idx].UserID)
 		}
 
-		teamId, err := teamAddService.AddTeam(c.Request.Context(), &req)
+		teamID, err := teamAddSvc.AddTeam(c.Request.Context(), &req)
 		if err != nil {
-			if errors.Is(err, customErrors.ErrUniqueViolation) {
+			if errors.Is(err, customerrors.ErrUniqueViolation) {
 				log.Error("team already exists", logger.Err(err))
 				c.JSON(http.StatusBadRequest, response.MakeError(
 					response.ErrCodeTeamExists,
@@ -55,7 +55,7 @@ func Handle(log *slog.Logger, teamAddService TeamAddService) gin.HandlerFunc {
 			return
 		}
 
-		log.Info("saved team with members successfully", "team_id", teamId)
+		log.Info("saved team with members successfully", "team_id", teamID)
 		c.JSON(http.StatusCreated, req)
 	}
 }

@@ -2,7 +2,7 @@ package storage
 
 import (
 	"PRAssignment/internal/domain"
-	"PRAssignment/internal/repository/customErrors"
+	customerrors "PRAssignment/internal/repository/customErrors"
 	"context"
 	"errors"
 	"fmt"
@@ -20,8 +20,8 @@ func (s *Storage) SaveTeam(ctx context.Context, tx pgx.Tx, team *domain.Team) (s
 	).Scan(&teamID)
 
 	if err != nil {
-		if customErrors.IsUniqueViolation(err) {
-			return "", customErrors.ErrUniqueViolation
+		if customerrors.IsUniqueViolation(err) {
+			return "", customerrors.ErrUniqueViolation
 		}
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
@@ -37,20 +37,20 @@ func (s *Storage) SaveTeamMember(ctx context.Context, tx pgx.Tx, member *domain.
 	)
 
 	if err != nil {
-		if customErrors.IsUniqueViolation(err) {
-			return customErrors.ErrUniqueViolation
+		if customerrors.IsUniqueViolation(err) {
+			return customerrors.ErrUniqueViolation
 		}
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
 }
 
-func (s *Storage) UpdateTeamMemberTeamId(ctx context.Context, tx pgx.Tx, userId string, teamId string) error {
+func (s *Storage) UpdateTeamMemberTeamId(ctx context.Context, tx pgx.Tx, userID string, teamID string) error {
 	const op = "repository.storage.UpdateTeamMemberTeamId"
 
 	_, err := tx.Exec(ctx,
 		`UPDATE team_members SET team_id = $1 WHERE user_id = $2`,
-		teamId, userId,
+		teamID, userID,
 	)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -109,21 +109,21 @@ func (s *Storage) GetTeam(ctx context.Context, teamName string) (*domain.Team, e
 		teamName).Scan(&team.TeamID, &team.TeamName)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, customErrors.ErrNotFound
+			return nil, customerrors.ErrNotFound
 		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return &team, nil
 }
 
-func (s *Storage) GetMembers(ctx context.Context, teamId string) ([]domain.TeamMember, error) {
+func (s *Storage) GetMembers(ctx context.Context, teamID string) ([]domain.TeamMember, error) {
 	const op = "repository.storage.GetMembers"
 
 	rows, err := s.conn.Query(ctx,
 		`SELECT user_id, team_id, username, is_active
         FROM team_members
         WHERE team_id = $1`,
-		teamId,
+		teamID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -146,13 +146,13 @@ func (s *Storage) GetMembers(ctx context.Context, teamId string) ([]domain.TeamM
 	return members, nil
 }
 
-func (s *Storage) GetTeamNameById(ctx context.Context, teamId string) (string, error) {
+func (s *Storage) GetTeamNameById(ctx context.Context, teamID string) (string, error) {
 	const op = "repository.storage.GetTeamNameById"
 
 	var teamName string
 	err := s.conn.QueryRow(ctx,
 		`SELECT team_name FROM teams WHERE team_id = $1`,
-		teamId,
+		teamID,
 	).Scan(&teamName)
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)

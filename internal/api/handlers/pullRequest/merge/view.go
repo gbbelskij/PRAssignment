@@ -2,7 +2,7 @@ package pullRequestMerge
 
 import (
 	"PRAssignment/internal/logger"
-	"PRAssignment/internal/repository/customErrors"
+	customerrors "PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
 	"PRAssignment/pkg"
@@ -15,7 +15,7 @@ import (
 )
 
 type PullRequestMergeService interface {
-	MergePullRequest(ctx context.Context, pullRequestId string) (*response.PullRequestMergeResponse, error)
+	MergePullRequest(ctx context.Context, pullRequestID string) (*response.PullRequestMergeResponse, error)
 }
 
 func Handle(log *slog.Logger, svc PullRequestMergeService) gin.HandlerFunc {
@@ -31,11 +31,11 @@ func Handle(log *slog.Logger, svc PullRequestMergeService) gin.HandlerFunc {
 			return
 		}
 
-		req.PullRequestId = pkg.ParseOrGenerateUUID(req.PullRequestId)
+		req.PullRequestID = pkg.ParseOrGenerateUUID(req.PullRequestID)
 
-		resp, err := svc.MergePullRequest(c.Request.Context(), req.PullRequestId)
+		resp, err := svc.MergePullRequest(c.Request.Context(), req.PullRequestID)
 		if err != nil {
-			if errors.Is(err, customErrors.ErrNotFound) {
+			if errors.Is(err, customerrors.ErrNotFound) {
 				log.Error("pull request not found", logger.Err(err))
 				c.JSON(http.StatusNotFound, response.MakeError(
 					response.ErrCodeNotFound,

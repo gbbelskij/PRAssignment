@@ -9,7 +9,7 @@ import (
 
 type TeamGetStorage interface {
 	GetTeam(ctx context.Context, teamName string) (*domain.Team, error)
-	GetMembers(ctx context.Context, teamId string) ([]domain.TeamMember, error)
+	GetMembers(ctx context.Context, teamID string) ([]domain.TeamMember, error)
 }
 
 type TeamGetService struct {
@@ -34,7 +34,7 @@ func (s *TeamGetService) GetTeamWithMembers(ctx context.Context, teamName string
 	responseMembers := make([]response.TeamMember, 0, len(members))
 	for _, m := range members {
 		responseMembers = append(responseMembers, response.TeamMember{
-			UserId:   m.UserID,
+			UserID:   m.UserID,
 			Username: m.Username,
 			IsActive: m.IsActive,
 		})

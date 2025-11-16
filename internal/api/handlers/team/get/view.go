@@ -2,7 +2,7 @@ package teamGet
 
 import (
 	"PRAssignment/internal/logger"
-	"PRAssignment/internal/repository/customErrors"
+	customerrors "PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/response"
 	"context"
 	"errors"
@@ -22,7 +22,7 @@ func Handle(log *slog.Logger, svc TeamGetService) gin.HandlerFunc {
 
 		resp, err := svc.GetTeamWithMembers(c.Request.Context(), teamName)
 		if err != nil {
-			if errors.Is(err, customErrors.ErrNotFound) {
+			if errors.Is(err, customerrors.ErrNotFound) {
 				log.Error("no such team", logger.Err(err))
 				c.JSON(http.StatusNotFound, response.MakeError(
 					response.ErrCodeNotFound,

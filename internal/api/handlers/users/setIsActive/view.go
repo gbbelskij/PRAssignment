@@ -2,7 +2,7 @@ package usersIsActive
 
 import (
 	"PRAssignment/internal/logger"
-	"PRAssignment/internal/repository/customErrors"
+	customerrors "PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
 	"PRAssignment/pkg"
@@ -15,7 +15,7 @@ import (
 )
 
 type UserService interface {
-	SetUserActiveStatus(ctx context.Context, userId string, isActive bool) (*response.UserSetIsActiveResponse, error)
+	SetUserActiveStatus(ctx context.Context, userID string, isActive bool) (*response.UserSetIsActiveResponse, error)
 }
 
 func Handle(log *slog.Logger, userService UserService) gin.HandlerFunc {
@@ -31,15 +31,15 @@ func Handle(log *slog.Logger, userService UserService) gin.HandlerFunc {
 			return
 		}
 
-		req.UserId = pkg.ParseOrGenerateUUID(req.UserId)
+		req.UserID = pkg.ParseOrGenerateUUID(req.UserID)
 
 		resp, err := userService.SetUserActiveStatus(
 			c.Request.Context(),
-			req.UserId,
+			req.UserID,
 			req.IsActive,
 		)
 		if err != nil {
-			if errors.Is(err, customErrors.ErrNotFound) {
+			if errors.Is(err, customerrors.ErrNotFound) {
 				log.Error("no such user", logger.Err(err))
 				c.JSON(http.StatusNotFound, response.MakeError(
 					response.ErrCodeNotFound,

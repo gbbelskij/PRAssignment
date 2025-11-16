@@ -8,9 +8,9 @@ import (
 )
 
 type PullRequestMergeStorage interface {
-	GetPullRequestById(ctx context.Context, pullRequestId string) (*domain.PullRequest, error)
-	UpdatePullRequestStatus(ctx context.Context, pullRequestId string) error
-	GetPullRequestReviewers(ctx context.Context, pullRequestId string) ([]string, error)
+	GetPullRequestById(ctx context.Context, pullRequestID string) (*domain.PullRequest, error)
+	UpdatePullRequestStatus(ctx context.Context, pullRequestID string) error
+	GetPullRequestReviewers(ctx context.Context, pullRequestID string) ([]string, error)
 }
 
 type PullRequestMergeService struct {
@@ -21,24 +21,24 @@ func NewPullRequestMergeService(storage PullRequestMergeStorage) *PullRequestMer
 	return &PullRequestMergeService{storage: storage}
 }
 
-func (s *PullRequestMergeService) MergePullRequest(ctx context.Context, pullRequestId string) (*response.PullRequestMergeResponse, error) {
-	pr, err := s.storage.GetPullRequestById(ctx, pullRequestId)
+func (s *PullRequestMergeService) MergePullRequest(ctx context.Context, pullRequestID string) (*response.PullRequestMergeResponse, error) {
+	pr, err := s.storage.GetPullRequestById(ctx, pullRequestID)
 	if err != nil {
 		return nil, fmt.Errorf("get pull request: %w", err)
 	}
 
 	if pr.Status != domain.PullRequestStatusMerged {
-		err = s.storage.UpdatePullRequestStatus(ctx, pullRequestId)
+		err = s.storage.UpdatePullRequestStatus(ctx, pullRequestID)
 		if err != nil {
 			return nil, fmt.Errorf("update pull request status: %w", err)
 		}
-		pr, err = s.storage.GetPullRequestById(ctx, pullRequestId)
+		pr, err = s.storage.GetPullRequestById(ctx, pullRequestID)
 		if err != nil {
 			return nil, fmt.Errorf("get updated pull request: %w", err)
 		}
 	}
 
-	reviewers, err := s.storage.GetPullRequestReviewers(ctx, pullRequestId)
+	reviewers, err := s.storage.GetPullRequestReviewers(ctx, pullRequestID)
 	if err != nil {
 		return nil, fmt.Errorf("get reviewers: %w", err)
 	}

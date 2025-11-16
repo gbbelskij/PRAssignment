@@ -1,8 +1,8 @@
-package pullRequestCreate
+package pullrequestcreate
 
 import (
 	"PRAssignment/internal/logger"
-	"PRAssignment/internal/repository/customErrors"
+	customerrors "PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
 	"PRAssignment/pkg"
@@ -14,11 +14,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PullRequestCreateService interface {
+type pullRequestCreateService interface {
 	CreatePullRequest(ctx context.Context, req *request.PullRequestCreateRequest) (*response.PullRequestCreateResponse, error)
 }
 
-func Handle(log *slog.Logger, svc PullRequestCreateService) gin.HandlerFunc {
+func Handle(log *slog.Logger, svc pullRequestCreateService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req request.PullRequestCreateRequest
 
@@ -31,12 +31,12 @@ func Handle(log *slog.Logger, svc PullRequestCreateService) gin.HandlerFunc {
 			return
 		}
 
-		req.AuthorId = pkg.ParseOrGenerateUUID(req.AuthorId)
-		req.PullRequestId = pkg.ParseOrGenerateUUID(req.PullRequestId)
+		req.AuthorID = pkg.ParseOrGenerateUUID(req.AuthorID)
+		req.PullRequestID = pkg.ParseOrGenerateUUID(req.PullRequestID)
 
 		resp, err := svc.CreatePullRequest(c.Request.Context(), &req)
 		if err != nil {
-			if errors.Is(err, customErrors.ErrNotFound) {
+			if errors.Is(err, customerrors.ErrNotFound) {
 				log.Error("no such author", logger.Err(err))
 				c.JSON(http.StatusNotFound, response.MakeError(
 					response.ErrCodeNotFound,
@@ -45,7 +45,7 @@ func Handle(log *slog.Logger, svc PullRequestCreateService) gin.HandlerFunc {
 				return
 			}
 
-			if errors.Is(err, customErrors.ErrUniqueViolation) {
+			if errors.Is(err, customerrors.ErrUniqueViolation) {
 				log.Error("PR with such id already exists", logger.Err(err))
 				c.JSON(http.StatusConflict, response.MakeError(
 					response.ErrCodePRExists,
@@ -54,7 +54,7 @@ func Handle(log *slog.Logger, svc PullRequestCreateService) gin.HandlerFunc {
 				return
 			}
 
-			if errors.Is(err, customErrors.ErrNoCandidate) {
+			if errors.Is(err, customerrors.ErrNoCandidate) {
 				log.Error("no candidates", logger.Err(err))
 				c.JSON(http.StatusConflict, response.MakeError(
 					response.ErrCodeNoCandidate,

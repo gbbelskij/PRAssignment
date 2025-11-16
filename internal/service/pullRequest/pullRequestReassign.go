@@ -2,17 +2,17 @@ package pullRequestService
 
 import (
 	"PRAssignment/internal/domain"
-	"PRAssignment/internal/repository/customErrors"
+	customerrors "PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/response"
 	"context"
 	"fmt"
 )
 
 type PullRequestReassignStorage interface {
-	GetPullRequestById(ctx context.Context, pullRequestId string) (*domain.PullRequest, error)
-	GetPullRequestStatus(ctx context.Context, pullRequestId string) (*domain.PullRequestStatus, error)
-	GetPullRequestReviewers(ctx context.Context, pullRequestId string) ([]string, error)
-	ReassignReviewerInDb(ctx context.Context, pullRequestId string, oldUserId string) (string, error)
+	GetPullRequestById(ctx context.Context, pullRequestID string) (*domain.PullRequest, error)
+	GetPullRequestStatus(ctx context.Context, pullRequestID string) (*domain.PullRequestStatus, error)
+	GetPullRequestReviewers(ctx context.Context, pullRequestID string) ([]string, error)
+	ReassignReviewerInDb(ctx context.Context, pullRequestID string, oldUserID string) (string, error)
 }
 
 type PullRequestReassignService struct {
@@ -23,44 +23,44 @@ func NewPullRequestReassignService(storage PullRequestReassignStorage) *PullRequ
 	return &PullRequestReassignService{storage: storage}
 }
 
-func (s *PullRequestReassignService) ReassignReviewer(ctx context.Context, pullRequestId string, oldUserId string) (*response.PullRequestReassignResponse, error) {
-	status, err := s.storage.GetPullRequestStatus(ctx, pullRequestId)
+func (s *PullRequestReassignService) ReassignReviewer(ctx context.Context, pullRequestID string, oldUserID string) (*response.PullRequestReassignResponse, error) {
+	status, err := s.storage.GetPullRequestStatus(ctx, pullRequestID)
 	if err != nil {
 		return nil, fmt.Errorf("get pull request status: %w", err)
 	}
 
 	if *status == domain.PullRequestStatusMerged {
-		return nil, customErrors.ErrPrMerged
+		return nil, customerrors.ErrPrMerged
 	}
 
-	reviewers, err := s.storage.GetPullRequestReviewers(ctx, pullRequestId)
+	reviewers, err := s.storage.GetPullRequestReviewers(ctx, pullRequestID)
 	if err != nil {
 		return nil, fmt.Errorf("get reviewers: %w", err)
 	}
 
 	isReviewer := false
 	for _, r := range reviewers {
-		if r == oldUserId {
+		if r == oldUserID {
 			isReviewer = true
 			break
 		}
 	}
 
 	if !isReviewer {
-		return nil, customErrors.ErrNotAssigned
+		return nil, customerrors.ErrNotAssigned
 	}
 
-	newReviewerId, err := s.storage.ReassignReviewerInDb(ctx, pullRequestId, oldUserId)
+	newReviewerID, err := s.storage.ReassignReviewerInDb(ctx, pullRequestID, oldUserID)
 	if err != nil {
 		return nil, fmt.Errorf("reassign reviewer: %w", err)
 	}
 
-	pr, err := s.storage.GetPullRequestById(ctx, pullRequestId)
+	pr, err := s.storage.GetPullRequestById(ctx, pullRequestID)
 	if err != nil {
 		return nil, fmt.Errorf("get updated pull request: %w", err)
 	}
 
-	updatedReviewers, err := s.storage.GetPullRequestReviewers(ctx, pullRequestId)
+	updatedReviewers, err := s.storage.GetPullRequestReviewers(ctx, pullRequestID)
 	if err != nil {
 		return nil, fmt.Errorf("get updated reviewers: %w", err)
 	}
@@ -71,7 +71,7 @@ func (s *PullRequestReassignService) ReassignReviewer(ctx context.Context, pullR
 		pr.AuthorID,
 		pr.Status,
 		updatedReviewers,
-		newReviewerId,
+		newReviewerID,
 	)
 
 	return &resp, nil

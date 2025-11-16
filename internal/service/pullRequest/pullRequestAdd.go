@@ -29,9 +29,9 @@ func (s *PullRequestCreateService) CreatePullRequest(ctx context.Context, req *r
 	}
 
 	resp := response.MakePullRequestCreateResponse(
-		req.PullRequestId,
+		req.PullRequestID,
 		req.PullRequestName,
-		req.AuthorId,
+		req.AuthorID,
 		domain.PullRequestStatusOpen,
 		reviewers,
 	)
@@ -41,9 +41,9 @@ func (s *PullRequestCreateService) CreatePullRequest(ctx context.Context, req *r
 
 func PullRequestFromRequest(prRequest request.PullRequestCreateRequest) *domain.PullRequest {
 	return &domain.PullRequest{
-		PullRequestID:   prRequest.PullRequestId,
+		PullRequestID:   prRequest.PullRequestID,
 		PullRequestName: prRequest.PullRequestName,
-		AuthorID:        prRequest.AuthorId,
+		AuthorID:        prRequest.AuthorID,
 		Status:          domain.PullRequestStatusOpen,
 	}
 }

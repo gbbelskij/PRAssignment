@@ -10,9 +10,9 @@ type PullRequestCreateResponse struct {
 }
 
 type PullRequestCreate struct {
-	PullRequestId     string                   `json:"pull_request_id"`
+	PullRequestID     string                   `json:"pull_request_id"`
 	PullRequestName   string                   `json:"pull_request_name"`
-	AuthorId          string                   `json:"author_id"`
+	AuthorID          string                   `json:"author_id"`
 	Status            domain.PullRequestStatus `json:"status"`
 	AssignedReviewers []string                 `json:"assigned_reviewers"`
 }
@@ -22,9 +22,9 @@ type PullRequestMergeResponse struct {
 }
 
 type PullRequestMerge struct {
-	PullRequestId     string                   `json:"pull_request_id"`
+	PullRequestID     string                   `json:"pull_request_id"`
 	PullRequestName   string                   `json:"pull_request_name"`
-	AuthorId          string                   `json:"author_id"`
+	AuthorID          string                   `json:"author_id"`
 	Status            domain.PullRequestStatus `json:"status"`
 	AssignedReviewers []string                 `json:"assigned_reviewers"`
 	MergedAt          time.Time                `json:"merged_at"`
@@ -36,25 +36,25 @@ type PullRequestReassignResponse struct {
 }
 
 type PullRequestReassign struct {
-	PullRequestId     string                   `json:"pull_request_id"`
+	PullRequestID     string                   `json:"pull_request_id"`
 	PullRequestName   string                   `json:"pull_request_name"`
-	AuthorId          string                   `json:"author_id"`
+	AuthorID          string                   `json:"author_id"`
 	Status            domain.PullRequestStatus `json:"status"`
 	AssignedReviewers []string                 `json:"assigned_reviewers"`
 }
 
 func MakePullRequestCreateResponse(
-	pullRequestId string,
+	pullRequestID string,
 	pullRequestName string,
-	authorId string,
+	authorID string,
 	status domain.PullRequestStatus,
 	assignedReviewers []string,
 ) PullRequestCreateResponse {
 	return PullRequestCreateResponse{
 		PR: PullRequestCreate{
-			PullRequestId:     pullRequestId,
+			PullRequestID:     pullRequestID,
 			PullRequestName:   pullRequestName,
-			AuthorId:          authorId,
+			AuthorID:          authorID,
 			Status:            status,
 			AssignedReviewers: assignedReviewers,
 		},
@@ -62,18 +62,18 @@ func MakePullRequestCreateResponse(
 }
 
 func MakePullRequestMergeResponse(
-	pullRequestId string,
+	pullRequestID string,
 	pullRequestName string,
-	authorId string,
+	authorID string,
 	status domain.PullRequestStatus,
 	assignedReviewers []string,
 	mergedAt time.Time,
 ) PullRequestMergeResponse {
 	return PullRequestMergeResponse{
 		PR: PullRequestMerge{
-			PullRequestId:     pullRequestId,
+			PullRequestID:     pullRequestID,
 			PullRequestName:   pullRequestName,
-			AuthorId:          authorId,
+			AuthorID:          authorID,
 			Status:            status,
 			AssignedReviewers: assignedReviewers,
 			MergedAt:          mergedAt,
@@ -82,18 +82,18 @@ func MakePullRequestMergeResponse(
 }
 
 func MakePullRequestReassignResponse(
-	pullRequestId string,
+	pullRequestID string,
 	pullRequestName string,
-	authorId string,
+	authorID string,
 	status domain.PullRequestStatus,
 	assignedReviewers []string,
 	replacedBy string,
 ) PullRequestReassignResponse {
 	return PullRequestReassignResponse{
 		PR: PullRequestReassign{
-			PullRequestId:     pullRequestId,
+			PullRequestID:     pullRequestID,
 			PullRequestName:   pullRequestName,
-			AuthorId:          authorId,
+			AuthorID:          authorID,
 			Status:            status,
 			AssignedReviewers: assignedReviewers,
 		},
