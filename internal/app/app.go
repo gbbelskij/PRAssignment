@@ -9,6 +9,9 @@ import (
 	usersGetReview "PRAssignment/internal/api/handlers/users/getReview"
 	usersIsActive "PRAssignment/internal/api/handlers/users/setIsActive"
 	"PRAssignment/internal/container"
+	pullRequestService "PRAssignment/internal/service/pullRequest"
+	teamService "PRAssignment/internal/service/team"
+	userService "PRAssignment/internal/service/users"
 	"context"
 
 	"github.com/gin-gonic/gin"
@@ -40,6 +43,15 @@ func (a *App) Run(ctx context.Context) error {
 }
 
 func setUpRoutes(ctx context.Context, container *container.Container, router *gin.Engine) {
+
+	setIsActiveService := userService.NewSetIsActiveService(container.Storage)
+	getReviewService := userService.NewGetReviewService(container.Storage)
+	teamAddService := teamService.NewTeamAddService(container.Storage)
+	teamGetService := teamService.NewTeamGetService(container.Storage)
+	pullRequestAddService := pullRequestService.NewPullRequestCreateService(container.Storage)
+	pullRequestMergeService := pullRequestService.NewPullRequestMergeService(container.Storage)
+	pullRequestReassignService := pullRequestService.NewPullRequestReassignService(container.Storage)
+
 	router.Static("/docs", "./docs")
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
 		ginSwagger.URL("/docs/swagger.yaml"),
@@ -47,20 +59,20 @@ func setUpRoutes(ctx context.Context, container *container.Container, router *gi
 
 	teamGroup := router.Group("/team")
 	{
-		teamGroup.POST("/add", teamAdd.Handle(container.Logger, container.Storage))
-		teamGroup.GET("/get", teamGet.Handle(container.Logger, container.Storage))
+		teamGroup.POST("/add", teamAdd.Handle(container.Logger, teamAddService))
+		teamGroup.GET("/get", teamGet.Handle(container.Logger, teamGetService))
 	}
 
 	usersGroup := router.Group("/users")
 	{
-		usersGroup.POST("/setIsActive", usersIsActive.Handle(container.Logger, container.Storage))
-		usersGroup.GET("/getReview", usersGetReview.Handle(container.Logger, container.Storage))
+		usersGroup.POST("/setIsActive", usersIsActive.Handle(container.Logger, setIsActiveService))
+		usersGroup.GET("/getReview", usersGetReview.Handle(container.Logger, getReviewService))
 	}
 
 	prGroup := router.Group("/pullRequest")
 	{
-		prGroup.POST("/create", pullRequestCreate.Handle(container.Logger, container.Storage))
-		prGroup.POST("/merge", pullRequestMerge.Handle(container.Logger, container.Storage))
-		prGroup.POST("/reassign", pullRequestReassign.Handle(container.Logger, container.Storage))
+		prGroup.POST("/create", pullRequestCreate.Handle(container.Logger, pullRequestAddService))
+		prGroup.POST("/merge", pullRequestMerge.Handle(container.Logger, pullRequestMergeService))
+		prGroup.POST("/reassign", pullRequestReassign.Handle(container.Logger, pullRequestReassignService))
 	}
 }

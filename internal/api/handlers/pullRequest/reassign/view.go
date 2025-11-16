@@ -1,9 +1,8 @@
 package pullRequestReassign
 
 import (
-	"PRAssignment/internal/domain"
 	"PRAssignment/internal/logger"
-	customErrors "PRAssignment/internal/repository/custom_errors"
+	"PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
 	"PRAssignment/pkg"
@@ -15,12 +14,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ReviewerUpdater interface {
-	UpdateReviewer(ctx context.Context, pullRequestId string, oldUserId string) (*domain.PullRequest, string, error)
-	GetPullRequestReviewers(ctx context.Context, pullRequestId string) ([]string, error)
+type PullRequestReassignService interface {
+	ReassignReviewer(ctx context.Context, pullRequestId string, oldUserId string) (*response.PullRequestReassignResponse, error)
 }
 
-func Handle(log *slog.Logger, reviewerUpdater ReviewerUpdater) gin.HandlerFunc {
+func Handle(log *slog.Logger, svc PullRequestReassignService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req request.PullRequestReassignRequest
 
@@ -36,7 +34,7 @@ func Handle(log *slog.Logger, reviewerUpdater ReviewerUpdater) gin.HandlerFunc {
 		req.PullRequestId = pkg.ParseOrGenerateUUID(req.PullRequestId)
 		req.OldUserId = pkg.ParseOrGenerateUUID(req.OldUserId)
 
-		pullRequest, replacedBy, err := reviewerUpdater.UpdateReviewer(c.Request.Context(), req.PullRequestId, req.OldUserId)
+		resp, err := svc.ReassignReviewer(c.Request.Context(), req.PullRequestId, req.OldUserId)
 		if err != nil {
 			if errors.Is(err, customErrors.ErrNotFound) {
 				log.Error("no such pr or user", logger.Err(err))
@@ -73,25 +71,15 @@ func Handle(log *slog.Logger, reviewerUpdater ReviewerUpdater) gin.HandlerFunc {
 				))
 				return
 			}
-		}
 
-		reviewers, err := reviewerUpdater.GetPullRequestReviewers(c.Request.Context(), req.PullRequestId)
-		if err != nil {
-			log.Error("failed to get reviewers", logger.Err(err))
+			log.Error("failed to reassign reviewer", logger.Err(err))
 			c.JSON(http.StatusInternalServerError, response.MakeError(
 				response.ErrCodeInternalServerError,
-				"Failed to get reviewers",
+				"Failed to reassign reviewer",
 			))
 			return
 		}
 
-		c.JSON(http.StatusOK, response.MakePullRequestReassignResponse(
-			pullRequest.PullRequestID,
-			pullRequest.PullRequestName,
-			pullRequest.AuthorID,
-			pullRequest.Status,
-			reviewers,
-			replacedBy,
-		))
+		c.JSON(http.StatusOK, resp)
 	}
 }

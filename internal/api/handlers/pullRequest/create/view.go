@@ -1,12 +1,10 @@
 package pullRequestCreate
 
 import (
-	"PRAssignment/internal/domain"
 	"PRAssignment/internal/logger"
-	customErrors "PRAssignment/internal/repository/custom_errors"
+	"PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
-	service "PRAssignment/internal/service/pullRequest"
 	"PRAssignment/pkg"
 	"context"
 	"errors"
@@ -16,11 +14,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PullRequestAdder interface {
-	AddPullRequest(ctx context.Context, pullRequest *domain.PullRequest) ([]string, error)
+type PullRequestCreateService interface {
+	CreatePullRequest(ctx context.Context, req *request.PullRequestCreateRequest) (*response.PullRequestCreateResponse, error)
 }
 
-func Handle(log *slog.Logger, pullRequestAdder PullRequestAdder) gin.HandlerFunc {
+func Handle(log *slog.Logger, svc PullRequestCreateService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req request.PullRequestCreateRequest
 
@@ -36,8 +34,7 @@ func Handle(log *slog.Logger, pullRequestAdder PullRequestAdder) gin.HandlerFunc
 		req.AuthorId = pkg.ParseOrGenerateUUID(req.AuthorId)
 		req.PullRequestId = pkg.ParseOrGenerateUUID(req.PullRequestId)
 
-		pullRequest := service.PullRequestFromRequest(req)
-		reviewers, err := pullRequestAdder.AddPullRequest(c.Request.Context(), pullRequest)
+		resp, err := svc.CreatePullRequest(c.Request.Context(), &req)
 		if err != nil {
 			if errors.Is(err, customErrors.ErrNotFound) {
 				log.Error("no such author", logger.Err(err))
@@ -74,12 +71,6 @@ func Handle(log *slog.Logger, pullRequestAdder PullRequestAdder) gin.HandlerFunc
 			return
 		}
 
-		c.JSON(http.StatusCreated, response.MakePullRequestCreateResponse(
-			req.PullRequestId,
-			req.PullRequestName,
-			req.AuthorId,
-			domain.PullRequestStatusOpen,
-			reviewers,
-		))
+		c.JSON(http.StatusCreated, resp)
 	}
 }

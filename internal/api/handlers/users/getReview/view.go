@@ -1,7 +1,6 @@
 package usersGetReview
 
 import (
-	"PRAssignment/internal/domain"
 	"PRAssignment/internal/response"
 	"PRAssignment/pkg"
 	"context"
@@ -11,26 +10,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PullRequestsGetter interface {
-	GetPullRequests(ctx context.Context, userId string) ([]domain.PullRequest, error)
+type GetReviewService interface {
+	GetUserPullRequests(ctx context.Context, userId string) (*response.UsersGetReviewResponse, error)
 }
 
-func Handle(log *slog.Logger, pullRequestsGetter PullRequestsGetter) gin.HandlerFunc {
+func Handle(log *slog.Logger, getReviewService GetReviewService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := pkg.ParseOrGenerateUUID(c.Query("user_id"))
 
-		pullRequests, err := pullRequestsGetter.GetPullRequests(c.Request.Context(), userId)
+		resp, err := getReviewService.GetUserPullRequests(c.Request.Context(), userId)
 		if err != nil {
-			log.Error("failed go get pull requests")
+			log.Error("failed to get pull requests", "error", err)
 			c.JSON(http.StatusInternalServerError, response.MakeError(
 				response.ErrCodeInternalServerError,
 				"Failed to get pull requests",
 			))
+			return
 		}
 
-		c.JSON(http.StatusOK, response.MakeUsersGetReviewResponse(
-			userId,
-			pullRequests,
-		))
+		c.JSON(http.StatusOK, resp)
 	}
 }

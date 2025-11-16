@@ -1,9 +1,8 @@
 package usersIsActive
 
 import (
-	"PRAssignment/internal/domain"
 	"PRAssignment/internal/logger"
-	customErrors "PRAssignment/internal/repository/custom_errors"
+	"PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
 	"PRAssignment/pkg"
@@ -15,12 +14,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserUpdateTeamGetter interface {
-	UpdateUser(ctx context.Context, userId string, isActive bool) (*domain.TeamMember, error)
-	GetTeamNameById(ctx context.Context, teamId string) (string, error)
+type UserService interface {
+	SetUserActiveStatus(ctx context.Context, userId string, isActive bool) (*response.UserSetIsActiveResponse, error)
 }
 
-func Handle(log *slog.Logger, userUpdaterTeamGetter UserUpdateTeamGetter) gin.HandlerFunc {
+func Handle(log *slog.Logger, userService UserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req request.UserSetIsActiveRequest
 
@@ -35,7 +33,7 @@ func Handle(log *slog.Logger, userUpdaterTeamGetter UserUpdateTeamGetter) gin.Ha
 
 		req.UserId = pkg.ParseOrGenerateUUID(req.UserId)
 
-		teamMember, err := userUpdaterTeamGetter.UpdateUser(
+		resp, err := userService.SetUserActiveStatus(
 			c.Request.Context(),
 			req.UserId,
 			req.IsActive,
@@ -50,29 +48,14 @@ func Handle(log *slog.Logger, userUpdaterTeamGetter UserUpdateTeamGetter) gin.Ha
 				return
 			}
 
-			log.Error("failed to find user", logger.Err(err))
+			log.Error("failed to update user status", logger.Err(err))
 			c.JSON(http.StatusInternalServerError, response.MakeError(
 				response.ErrCodeInternalServerError,
-				"Failed to find user",
+				"Failed to update user",
 			))
 			return
 		}
 
-		teamName, err := userUpdaterTeamGetter.GetTeamNameById(c.Request.Context(), teamMember.TeamID)
-		if err != nil {
-			log.Error("failed to find team name", logger.Err(err))
-			c.JSON(http.StatusInternalServerError, response.MakeError(
-				response.ErrCodeInternalServerError,
-				"Failed to find team",
-			))
-			return
-		}
-
-		c.JSON(http.StatusOK, response.MakeUserSetIsActiveResponse(
-			teamMember.UserID,
-			teamMember.Username,
-			teamName,
-			teamMember.IsActive,
-		))
+		c.JSON(http.StatusOK, resp)
 	}
 }

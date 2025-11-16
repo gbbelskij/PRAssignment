@@ -1,9 +1,8 @@
 package pullRequestMerge
 
 import (
-	"PRAssignment/internal/domain"
 	"PRAssignment/internal/logger"
-	customErrors "PRAssignment/internal/repository/custom_errors"
+	"PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
 	"PRAssignment/pkg"
@@ -15,12 +14,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PullRequestUpdater interface {
-	UpdatePullRequest(ctx context.Context, pullRequestId string) (*domain.PullRequest, error)
-	GetPullRequestReviewers(ctx context.Context, pullRequestId string) ([]string, error)
+type PullRequestMergeService interface {
+	MergePullRequest(ctx context.Context, pullRequestId string) (*response.PullRequestMergeResponse, error)
 }
 
-func Handle(log *slog.Logger, pullRequestUpdater PullRequestUpdater) gin.HandlerFunc {
+func Handle(log *slog.Logger, svc PullRequestMergeService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req request.PullRequestMergeRequest
 
@@ -35,7 +33,7 @@ func Handle(log *slog.Logger, pullRequestUpdater PullRequestUpdater) gin.Handler
 
 		req.PullRequestId = pkg.ParseOrGenerateUUID(req.PullRequestId)
 
-		pullRequest, err := pullRequestUpdater.UpdatePullRequest(c.Request.Context(), req.PullRequestId)
+		resp, err := svc.MergePullRequest(c.Request.Context(), req.PullRequestId)
 		if err != nil {
 			if errors.Is(err, customErrors.ErrNotFound) {
 				log.Error("pull request not found", logger.Err(err))
@@ -46,30 +44,14 @@ func Handle(log *slog.Logger, pullRequestUpdater PullRequestUpdater) gin.Handler
 				return
 			}
 
-			log.Error("failed to update pull request", logger.Err(err))
+			log.Error("failed to merge pull request", logger.Err(err))
 			c.JSON(http.StatusInternalServerError, response.MakeError(
 				response.ErrCodeInternalServerError,
-				"Failed to update pull request",
+				"Failed to merge pull request",
 			))
 			return
 		}
 
-		reviewers, err := pullRequestUpdater.GetPullRequestReviewers(c.Request.Context(), req.PullRequestId)
-		if err != nil {
-			log.Error("failed to find reviewers", logger.Err(err))
-			c.JSON(http.StatusInternalServerError, response.MakeError(
-				response.ErrCodeInternalServerError,
-				"Failed to find reviewers",
-			))
-		}
-
-		c.JSON(http.StatusOK, response.MakePullRequestMergeResponse(
-			pullRequest.PullRequestID,
-			pullRequest.PullRequestName,
-			pullRequest.AuthorID,
-			pullRequest.Status,
-			reviewers,
-			pullRequest.MergedAt,
-		))
+		c.JSON(http.StatusOK, resp)
 	}
 }

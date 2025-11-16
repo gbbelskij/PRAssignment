@@ -2,7 +2,7 @@ package storage
 
 import (
 	"PRAssignment/internal/domain"
-	customErrors "PRAssignment/internal/repository/custom_errors"
+	"PRAssignment/internal/repository/customErrors"
 	"context"
 	"fmt"
 

@@ -2,7 +2,7 @@ package storage
 
 import (
 	"PRAssignment/internal/domain"
-	customErrors "PRAssignment/internal/repository/custom_errors"
+	"PRAssignment/internal/repository/customErrors"
 	"context"
 	"errors"
 	"fmt"
@@ -101,7 +101,7 @@ func (s *Storage) SaveTeamWithMembers(
 }
 
 func (s *Storage) GetTeam(ctx context.Context, teamName string) (*domain.Team, error) {
-	const op = "repository.storage.team.GetTeam"
+	const op = "repository.storage.GetTeam"
 
 	var team domain.Team
 	err := s.conn.QueryRow(ctx,
@@ -117,12 +117,12 @@ func (s *Storage) GetTeam(ctx context.Context, teamName string) (*domain.Team, e
 }
 
 func (s *Storage) GetMembers(ctx context.Context, teamId string) ([]domain.TeamMember, error) {
-	const op = "repository.storage.team.GetMembers"
+	const op = "repository.storage.GetMembers"
 
 	rows, err := s.conn.Query(ctx,
 		`SELECT user_id, team_id, username, is_active
-		FROM team_members
-		WHERE team_id = $1`,
+        FROM team_members
+        WHERE team_id = $1`,
 		teamId,
 	)
 	if err != nil {

@@ -1,9 +1,8 @@
 package teamGet
 
 import (
-	"PRAssignment/internal/domain"
 	"PRAssignment/internal/logger"
-	customErrors "PRAssignment/internal/repository/custom_errors"
+	"PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/response"
 	"context"
 	"errors"
@@ -13,16 +12,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type TeamGetter interface {
-	GetTeam(ctx context.Context, teamName string) (*domain.Team, error)
-	GetMembers(ctx context.Context, teamId string) ([]domain.TeamMember, error)
+type TeamGetService interface {
+	GetTeamWithMembers(ctx context.Context, teamName string) (*response.TeamGetResponse, error)
 }
 
-func Handle(log *slog.Logger, teamGetter TeamGetter) gin.HandlerFunc {
+func Handle(log *slog.Logger, svc TeamGetService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		teamName := c.Query("team_name")
 
-		team, err := teamGetter.GetTeam(c.Request.Context(), teamName)
+		resp, err := svc.GetTeamWithMembers(c.Request.Context(), teamName)
 		if err != nil {
 			if errors.Is(err, customErrors.ErrNotFound) {
 				log.Error("no such team", logger.Err(err))
@@ -32,37 +30,12 @@ func Handle(log *slog.Logger, teamGetter TeamGetter) gin.HandlerFunc {
 				))
 				return
 			}
-
-			log.Error("failed to find team", logger.Err(err))
+			log.Error("failed to get team or members", logger.Err(err))
 			c.JSON(http.StatusInternalServerError, response.MakeError(
 				response.ErrCodeInternalServerError,
-				"Failed to find team",
+				"Failed to get team or members",
 			))
 			return
-		}
-
-		members, err := teamGetter.GetMembers(c.Request.Context(), team.TeamID)
-		if err != nil {
-			log.Error("failed to find members", logger.Err(err))
-			c.JSON(http.StatusInternalServerError, response.MakeError(
-				response.ErrCodeInternalServerError,
-				"Failed to find members",
-			))
-			return
-		}
-
-		var responseMembers []response.TeamMember
-		for _, m := range members {
-			responseMembers = append(responseMembers, response.TeamMember{
-				UserId:   m.UserID,
-				Username: m.Username,
-				IsActive: m.IsActive,
-			})
-		}
-
-		resp := response.TeamGetResponse{
-			TeamName: team.TeamName,
-			Members:  responseMembers,
 		}
 
 		c.JSON(http.StatusOK, resp)

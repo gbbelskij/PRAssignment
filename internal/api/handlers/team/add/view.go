@@ -1,12 +1,10 @@
 package teamAdd
 
 import (
-	"PRAssignment/internal/domain"
 	"PRAssignment/internal/logger"
-	customErrors "PRAssignment/internal/repository/custom_errors"
+	"PRAssignment/internal/repository/customErrors"
 	"PRAssignment/internal/request"
 	"PRAssignment/internal/response"
-	service "PRAssignment/internal/service/team"
 	"PRAssignment/pkg"
 	"context"
 	"errors"
@@ -17,11 +15,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type TeamAdder interface {
-	SaveTeamWithMembers(ctx context.Context, team *domain.Team, members []domain.TeamMember) (string, error)
+type TeamAddService interface {
+	AddTeam(ctx context.Context, req *request.TeamAddRequest) (string, error)
 }
 
-func Handle(log *slog.Logger, teamAdder TeamAdder) gin.HandlerFunc {
+func Handle(log *slog.Logger, teamAddService TeamAddService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req request.TeamAddRequest
 
@@ -38,15 +36,8 @@ func Handle(log *slog.Logger, teamAdder TeamAdder) gin.HandlerFunc {
 			req.Members[idx].UserId = pkg.ParseOrGenerateUUID(req.Members[idx].UserId)
 		}
 
-		teamId, err := teamAdder.SaveTeamWithMembers(
-			c.Request.Context(),
-			service.TeamFromRequest(req),
-			service.TeamMembersFromRequest(req.Members),
-		)
-
+		teamId, err := teamAddService.AddTeam(c.Request.Context(), &req)
 		if err != nil {
-			log.Error("failed to save team with members", logger.Err(err))
-
 			if errors.Is(err, customErrors.ErrUniqueViolation) {
 				log.Error("team already exists", logger.Err(err))
 				c.JSON(http.StatusBadRequest, response.MakeError(
