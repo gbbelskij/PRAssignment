@@ -10,11 +10,14 @@ import (
 	usersGetReview "PRAssignment/internal/api/handlers/users/getReview"
 	usersIsActive "PRAssignment/internal/api/handlers/users/setIsActive"
 	"PRAssignment/internal/container"
+	"PRAssignment/internal/logger"
 	pullRequestService "PRAssignment/internal/service/pullRequest"
 	statsService "PRAssignment/internal/service/stats"
 	teamService "PRAssignment/internal/service/team"
 	userService "PRAssignment/internal/service/users"
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -27,11 +30,11 @@ type App struct {
 	address   string
 }
 
-func NewApp(ctx context.Context, c *container.Container) *App {
+func NewApp(c *container.Container) *App {
 	router := gin.New()
 	router.Use(gin.Recovery(), gin.Logger())
 
-	setUpRoutes(ctx, c, router)
+	setUpRoutes(c, router)
 
 	return &App{
 		container: c,
@@ -41,10 +44,32 @@ func NewApp(ctx context.Context, c *container.Container) *App {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	return a.router.Run(a.address)
+	srv := &http.Server{
+		Addr:    a.address,
+		Handler: a.router,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			a.container.Logger.Error("server error", logger.Err(err))
+		}
+	}()
+
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		a.container.Logger.Error("server shutdown error", logger.Err(err))
+		return err
+	}
+
+	a.container.Logger.Info("server shutdown gracefully")
+	return nil
 }
 
-func setUpRoutes(ctx context.Context, container *container.Container, router *gin.Engine) {
+func setUpRoutes(container *container.Container, router *gin.Engine) {
 
 	setIsActiveService := userService.NewSetIsActiveService(container.Storage)
 	getReviewService := userService.NewGetReviewService(container.Storage)

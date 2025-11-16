@@ -15,10 +15,10 @@ type Container struct {
 	Storage *storage.Storage
 }
 
-func NewContainer() *Container {
+func NewContainer(ctx context.Context) *Container {
 	cfg := config.MustLoad()
 	log := logger.NewLogger(cfg.Env)
-	pgstorage, err := storage.NewStorage(context.Background())
+	pgstorage, err := storage.NewStorage(ctx)
 	if err != nil {
 		log.Error("failed to connect to database")
 		os.Exit(2)

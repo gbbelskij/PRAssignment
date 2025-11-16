@@ -12,8 +12,8 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	container := container.NewContainer()
-	app := app.NewApp(ctx, container)
+	container := container.NewContainer(ctx)
+	app := app.NewApp(container)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
