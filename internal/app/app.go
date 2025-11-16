@@ -4,12 +4,14 @@ import (
 	pullRequestCreate "PRAssignment/internal/api/handlers/pullRequest/create"
 	pullRequestMerge "PRAssignment/internal/api/handlers/pullRequest/merge"
 	pullRequestReassign "PRAssignment/internal/api/handlers/pullRequest/reassign"
+	"PRAssignment/internal/api/handlers/stats"
 	teamAdd "PRAssignment/internal/api/handlers/team/add"
 	teamGet "PRAssignment/internal/api/handlers/team/get"
 	usersGetReview "PRAssignment/internal/api/handlers/users/getReview"
 	usersIsActive "PRAssignment/internal/api/handlers/users/setIsActive"
 	"PRAssignment/internal/container"
 	pullRequestService "PRAssignment/internal/service/pullRequest"
+	statsService "PRAssignment/internal/service/stats"
 	teamService "PRAssignment/internal/service/team"
 	userService "PRAssignment/internal/service/users"
 	"context"
@@ -51,12 +53,14 @@ func setUpRoutes(ctx context.Context, container *container.Container, router *gi
 	pullRequestAddService := pullRequestService.NewPullRequestCreateService(container.Storage)
 	pullRequestMergeService := pullRequestService.NewPullRequestMergeService(container.Storage)
 	pullRequestReassignService := pullRequestService.NewPullRequestReassignService(container.Storage)
+	statsService := statsService.NewStatsService(container.Storage)
 
 	router.Static("/docs", "./docs")
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
 		ginSwagger.URL("/docs/swagger.yaml"),
 	))
 
+	router.GET("/stats", stats.Handle(container.Logger, statsService))
 	teamGroup := router.Group("/team")
 	{
 		teamGroup.POST("/add", teamAdd.Handle(container.Logger, teamAddService))

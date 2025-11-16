@@ -1,21 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE TABLE IF NOT EXISTS teams(
-    team_id UUID PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-    team_name VARCHAR(255) UNIQUE NOT NULL,
-    updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW() NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS teams_team_name_idx ON teams(team_name);
-
-CREATE TABLE IF NOT EXISTS team_members (
-    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    is_active BOOLEAN DEFAULT false NOT NULL
-);
-
 CREATE TYPE pull_request_status AS ENUM ('OPEN', 'MERGED');
 
 CREATE TABLE IF NOT EXISTS pull_requests(

@@ -424,3 +424,55 @@ paths:
                     pull_request_name: Add search
                     author_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
                     status: OPEN
+  /stats:
+    get:
+      tags: [Health]
+      summary: Получить статистику по системе
+      responses:
+        '200':
+          description: Статистика системы
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [total_users, total_teams, total_prs, merged_prs, open_prs, top_reviewers]
+                properties:
+                  total_users:
+                    type: integer
+                    description: Всего пользователей в системе
+                  total_teams:
+                    type: integer
+                    description: Всего команд
+                  total_prs:
+                    type: integer
+                    description: Всего PR создано
+                  merged_prs:
+                    type: integer
+                    description: Количество слитых PR
+                  open_prs:
+                    type: integer
+                    description: Количество открытых PR
+                  top_reviewers:
+                    type: array
+                    items:
+                      type: object
+                      required: [user_id, review_count]
+                      properties:
+                        user_id:
+                          type: string
+                        review_count:
+                          type: integer
+                    description: Top 10 ревьюверов по количеству назначений
+              example:
+                total_users: 245
+                total_teams: 15
+                total_prs: 1023
+                merged_prs: 856
+                open_prs: 167
+                top_reviewers:
+                  - user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+                    review_count: 45
+                  - user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12
+                    review_count: 38
+                  - user_id: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13
+                    review_count: 35
