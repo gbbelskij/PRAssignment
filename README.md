@@ -35,7 +35,7 @@ Golang
 ```bash
 git clone https://github.com/gbbelskij/PRAssignment
 cd PRAssignment
-touch .env # создать новый или скопировать для тестирования .env.example
+cp .env.example .env  # скопировать пример переменных сред окружения со стандартными значениями
 docker-compose up
 ```
 
