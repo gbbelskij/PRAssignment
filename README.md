@@ -30,6 +30,8 @@ Golang
 
 ## Инструкция по запуску
 **ВАЖНО** Перед запуском создать файл .env в корне репозитория на подобии файла [`.env.example`](./.env.example)
+
+Стандратные значения переменных среды указаны в [`.env.example`](./.env.example)
 ```bash
 git clone https://github.com/gbbelskij/PRAssignment
 cd PRAssignment
